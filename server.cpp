@@ -7,8 +7,6 @@
 #include <iostream>
 #include <mutex>
 
-std::mutex cout_mutex;
-
 void task(int sockfd, int& output) {
     struct sockaddr_storage their_addr;
     socklen_t addr_size;
@@ -20,14 +18,13 @@ void task(int sockfd, int& output) {
         
         client_socket = accept(sockfd, (struct sockaddr *)&their_addr, &addr_size);
 
-        ssize_t bytes_received = recv(client_socket, buffer, sizeof(buffer), 0);
+        ssize_t n = recv(client_socket, buffer, sizeof(buffer), 0);
 
-        if (bytes_received > 0) {
-            cout_mutex.lock();
-            std::cout << "Thread " << std::this_thread::get_id() << ": ";
-            std::cout.write(buffer, bytes_received);
-            std::cout << '\n';
-            cout_mutex.unlock();
+        if (n > 0) {
+            std::string command(buffer, n);
+            if (command == "PING") {
+                std::cout << "Match!\n";
+            }
         }
 
         close(client_socket);
